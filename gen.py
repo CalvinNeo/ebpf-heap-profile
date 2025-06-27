@@ -66,13 +66,14 @@ def gen_image1(chains_with_weights):
     fig, ax = plt.subplots(figsize=(x_range * 0.2, y_range * 0.2))
     # 绘制有向图
     # nx.draw(G, pos, node_shape = "s", node_color='lightblue', alpha = 0.5, edge_color='gray', node_size=10000, arrows=True, arrowsize=16)
-    nx.draw(G, pos, alpha = 1, edge_color='black', arrows=True, arrowsize=36)
+    nx.draw(G, pos, alpha = 1, edge_color='black', arrows=True, arrowsize=48)
 
     def nice(x):
-        return textwrap.fill(x[1:-1], width=30)
+        return textwrap.fill(x[1:-1], width=30).split("(")[0]
+
     labels = {node: f"{nice(node)}\n({pretty_size(node_weights[node])})" for node in G.nodes()}
 
-    nx.draw_networkx_labels(G, pos, labels=labels, font_size=36)  # 调整字体大小以避免重叠
+    nx.draw_networkx_labels(G, pos, labels=labels, font_size=48)  # 调整字体大小以避免重叠
 
     # 调整布局以避免箭头重叠
     plt.tight_layout()

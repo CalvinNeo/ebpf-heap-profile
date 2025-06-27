@@ -64,12 +64,9 @@ except KeyboardInterrupt:
     pass
 
 calls = b.get_table("calls")
-print("!!!! calls {}".format(len(calls)))
 stack_traces = b.get_table("stack_traces")
-print("!!!! stack_traces {}".format(len(stack_traces)))
 
 for k, v in reversed(sorted(calls.items(), key=lambda c: c[1].value)):
-    print("%d bytes allocated at:" % v.value)
     if k.value > 0 :
         for addr in stack_traces.walk(k.value):
             printb(b"\t%s" % b.sym(addr, pid, show_offset=True))
