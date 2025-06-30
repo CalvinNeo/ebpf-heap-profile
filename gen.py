@@ -109,9 +109,45 @@ def parse_log(file_path):
     return result
 
 
+def parse_ml_log(file_path):
+    with open(file_path, 'r') as file:
+        text = file.read()
+
+    def handle(x):
+        return "\"" + x.strip('\t').split("+")[0] + "\""
+
+    result = []
+    lines = text.splitlines()
+    i = 0
+    while i < len(lines):
+        match = re.match(r'\s*(\d+) bytes in (\d+) allocations from stack', lines[i])
+        if match:
+            bytes_alloc = int(match.group(1))
+            alloc_count = int(match.group(2))
+            i += 1
+            stack = []
+            while i < len(lines) and lines[i].strip().startswith('0x'):
+                # 提取符号信息（地址后面那部分）
+                parts = lines[i].split('\t')[-1]
+                stack.append(parts)
+                i += 1
+            stack = list(map(handle, stack))
+            stack.reverse()
+            # Include frequency
+            # result.append((bytes_alloc, alloc_count, stack))
+            result.append((bytes_alloc, stack))
+            # if len(result) > 3:
+            #     break
+        else:
+            i += 1
+    result = list(filter(lambda x: x[0] > 1024 * 10, result))
+    return result
+
+
 if __name__ == '__main__':
-    arr = parse_log("example.txt")
-    # for a in arr:
+    arr = parse_ml_log("ml-example.txt")
+    # for a in arr[:2]:
     #     print("{}".format(a))
+        
     # print("arr {}".format(arr[:2]))
     gen_image1(arr)

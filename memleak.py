@@ -101,7 +101,7 @@ parser.add_argument("--wa-missing-free", default=False, action="store_true",
         help="Workaround to alleviate misjudgments when free is missing")
 parser.add_argument("-s", "--sample-rate", default=1, type=int,
         help="sample every N-th allocation to decrease the overhead")
-parser.add_argument("-T", "--top", type=int, default=10,
+parser.add_argument("-T", "--top", type=int, default=99,
         help="display only this many top allocating stacks (by size)")
 parser.add_argument("-z", "--min-size", type=int,
         help="capture only allocations larger than or equal to this size")
@@ -500,16 +500,16 @@ if not kernel_trace:
                                 raise
 
         attach_probes("malloc")
-        # attach_probes("calloc")
-        # attach_probes("realloc")
-        # attach_probes("mmap", can_fail=True) # failed on jemalloc
-        # attach_probes("posix_memalign")
-        # attach_probes("valloc", can_fail=True) # failed on Android, is deprecated in libc.so from bionic directory
-        # attach_probes("memalign")
-        # attach_probes("pvalloc", can_fail=True) # failed on Android, is deprecated in libc.so from bionic directory
-        # attach_probes("aligned_alloc", can_fail=True)  # added in C11
-        # attach_probes("free", need_uretprobe=False)
-        # attach_probes("munmap", can_fail=True, need_uretprobe=False) # failed on jemalloc
+        attach_probes("calloc")
+        attach_probes("realloc")
+        attach_probes("mmap", can_fail=True) # failed on jemalloc
+        attach_probes("posix_memalign")
+        attach_probes("valloc", can_fail=True) # failed on Android, is deprecated in libc.so from bionic directory
+        attach_probes("memalign")
+        attach_probes("pvalloc", can_fail=True) # failed on Android, is deprecated in libc.so from bionic directory
+        attach_probes("aligned_alloc", can_fail=True)  # added in C11
+        attach_probes("free", need_uretprobe=False)
+        attach_probes("munmap", can_fail=True, need_uretprobe=False) # failed on jemalloc
 
 else:
         print("Attaching to kernel allocators, Ctrl+C to quit.")
