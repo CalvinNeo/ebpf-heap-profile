@@ -484,7 +484,6 @@ if not kernel_trace:
                 if args.symbols_prefix is not None:
                         sym = args.symbols_prefix + sym
                 try:
-                        print("attach {} need_uretprobe {}".format(sym, need_uretprobe))
                         a = bpf.attach_uprobe(name=obj, sym=sym,
                                           fn_name=fn_prefix + "_enter",
                                           pid=pid)

@@ -5,6 +5,13 @@ from matplotlib.text import Text
 import matplotlib.patches as patches
 import textwrap
 import re
+import os
+import mpld3
+from svgpan import *
+
+
+# Note: You'll need to define svg_javascript() function
+# Also make sure to import os module at the top of your file
 
 def pretty_size(size, units=('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')):
     if size == 0:
@@ -17,19 +24,17 @@ def pretty_size(size, units=('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'
     
     return f"{size:.2f}{units[unit_index]}"
 
-# 示例
-size_in_bytes = 1234567890
-print(pretty_size(size_in_bytes))  # 输出：1.15GB
-
 def gen_image1(chains_with_weights):
     # # 输入的链表和权值
     G = nx.DiGraph()
 
     # 初始化节点权值字典
     node_weights = {}
+    tot_w = 0
 
     # 遍历链表和权值，更新节点权值
     for weight, chain in chains_with_weights:
+        tot_w += weight
         for node in chain:
             if node in node_weights:
                 node_weights[node] += weight
@@ -41,6 +46,10 @@ def gen_image1(chains_with_weights):
         for i in range(len(chain) - 1, 0, -1):  # 从后向前遍历链表
             if chain[i] != chain[i - 1]:
                 G.add_edge(chain[i], chain[i - 1])  # 添加反向边
+    
+    for nv in sorted(node_weights.items(), key=lambda x: x[1]):
+        print("{} =====> {}% / {}".format(nv[0], nv[1] / tot_w * 100, pretty_size(nv[1])))
+    print("tot_w {}".format(pretty_size(tot_w)))
 
     # G = nx.petersen_graph()
     # 使用 spring_layout 作为初始布局
@@ -69,7 +78,11 @@ def gen_image1(chains_with_weights):
     nx.draw(G, pos, alpha = 1, edge_color='black', arrows=True, arrowsize=48)
 
     def nice(x):
-        return textwrap.fill(x[1:-1], width=30).split("(")[0]
+        a = textwrap.fill(x[1:-1], width=40).split("(")[0]
+        return a
+    
+    # def nice(x):
+    #     return x
 
     labels = {node: f"{nice(node)}\n({pretty_size(node_weights[node])})" for node in G.nodes()}
 
@@ -80,7 +93,9 @@ def gen_image1(chains_with_weights):
 
     # 保存为 SVG 文件
     plt.savefig("directed_graph_with_weights.svg", format="svg")
+    # mpld3.save_html(fig, "output.html") 
 
+    # rewrite_svg("directed_graph_with_weights.svg")
     # 显示图形
     # plt.show()
 
@@ -132,7 +147,9 @@ def parse_ml_log(file_path):
                 stack.append(parts)
                 i += 1
             stack = list(map(handle, stack))
+            stack = list(filter(lambda x: x!="\"[unknown]\"", stack))
             stack.reverse()
+            stack.append("malloc")
             # Include frequency
             # result.append((bytes_alloc, alloc_count, stack))
             result.append((bytes_alloc, stack))
@@ -140,12 +157,12 @@ def parse_ml_log(file_path):
             #     break
         else:
             i += 1
-    result = list(filter(lambda x: x[0] > 1024 * 10, result))
+    result = list(filter(lambda x: x[0] > 1, result))
     return result
 
 
 if __name__ == '__main__':
-    arr = parse_ml_log("ml-example.txt")
+    arr = parse_ml_log("mleak.txt")
     # for a in arr[:2]:
     #     print("{}".format(a))
         
