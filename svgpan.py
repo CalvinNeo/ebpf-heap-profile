@@ -240,47 +240,47 @@ function handleMouseUp(evt) {
 ]]></script>
 '''
 
-# def rewrite_svg(svgfile, opt_svg=False):
-#     with open(svgfile, 'r') as f:
-#         svg = f.read()
+def rewrite_svg(svgfile, opt_svg=False):
+    with open(svgfile, 'r') as f:
+        svg = f.read()
     
-#     # Remove the original file since we'll rewrite it
-#     os.unlink(svgfile)
+    # Remove the original file since we'll rewrite it
+    os.unlink(svgfile)
 
-#     # 1. 移除原 viewBox，设置 width/height 为 100%
-#     svg = re.sub(
-#         r'<svg([^>]*)width="[^"]*"([^>]*)height="[^"]*"([^>]*)viewBox="[^"]*"',
-#         r'<svg\1width="100%"\2height="100%"\3',
-#         svg
-#     )
+    # 1. 移除原 viewBox，设置 width/height 为 100%
+    svg = re.sub(
+        r'<svg([^>]*)width="[^"]*"([^>]*)height="[^"]*"([^>]*)viewBox="[^"]*"',
+        r'<svg\1width="100%"\2height="100%"\3',
+        svg
+    )
 
-#     # 2. 在 <svg> 标签后插入 JavaScript
-#     svg = re.sub(
-#         r'(<svg[^>]*>)',
-#         r'\1' + SVGPAN,
-#         svg
-#     )
+    # 2. 在 <svg> 标签后插入 JavaScript
+    svg = re.sub(
+        r'(<svg[^>]*>)',
+        r'\1' + SVGPAN,
+        svg
+    )
 
-#     # 3. 包裹所有内容到 <g id="viewport"> 中
-#     # 找到第一个 <g> 之前和 </svg> 之前的位置
-#     svg = re.sub(
-#         r'(<svg[^>]*>.*?)(<g[^>]*>)',
-#         r'\1<g id="viewport" transform="translate(0,0)">\2',
-#         svg,
-#         flags=re.DOTALL
-#     )
+    # 3. 包裹所有内容到 <g id="viewport"> 中
+    # 找到第一个 <g> 之前和 </svg> 之前的位置
+    svg = re.sub(
+        r'(<svg[^>]*>.*?)(<g[^>]*>)',
+        r'\1<g id="viewport" transform="translate(0,0)">\2',
+        svg,
+        flags=re.DOTALL
+    )
 
-#     # 4. 在结束前添加 </g>
-#     svg = re.sub(
-#         r'(.*)(</svg>)',
-#         r'\1</g>\2',
-#         svg,
-#         flags=re.DOTALL
-#     )
+    # 4. 在结束前添加 </g>
+    svg = re.sub(
+        r'(.*)(</svg>)',
+        r'\1</g>\2',
+        svg,
+        flags=re.DOTALL
+    )
 
-#     # Write back to temporary file
-#     with open(svgfile, 'w') as f:
-#         f.write(svg)
+    # Write back to temporary file
+    with open(svgfile, 'w') as f:
+        f.write(svg)
 
 def svg_javascript():
     """返回 SVG 交互式缩放/平移所需的 JavaScript 代码"""
@@ -335,7 +335,7 @@ def svg_javascript():
     ]]></script>
     """
 
-def rewrite_svg(svgfile, opt_svg=False):
+def rewrite_svg2(svgfile, opt_svg=False):
     try:
         with open(svgfile, 'r') as f:
             svg = f.read()

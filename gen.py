@@ -25,6 +25,7 @@ def pretty_size(size, units=('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'
     return f"{size:.2f}{units[unit_index]}"
 
 def gen_image1(chains_with_weights):
+    # chains_with_weights = chains_with_weights[:3]
     # # 输入的链表和权值
     G = nx.DiGraph()
 
@@ -47,6 +48,7 @@ def gen_image1(chains_with_weights):
             if chain[i] != chain[i - 1]:
                 G.add_edge(chain[i], chain[i - 1])  # 添加反向边
     
+    print("node count {} edge {}".format(len(node_weights), len(chains_with_weights)))
     for nv in sorted(node_weights.items(), key=lambda x: x[1]):
         print("{} =====> {}% / {}".format(nv[0], nv[1] / tot_w * 100, pretty_size(nv[1])))
     print("tot_w {}".format(pretty_size(tot_w)))
@@ -65,14 +67,13 @@ def gen_image1(chains_with_weights):
     y_values = [pos[node][1] for node in G.nodes()]
     x_range = max(x_values) - min(x_values)
     y_range = max(y_values) - min(y_values)
-    print("[{},{}] - [{},{}]".format(min(x_values), max(x_values), min(y_values), max(y_values)))
-
+    print("[{},{}] - [{},{}] ({},{})".format(min(x_values), max(x_values), min(y_values), max(y_values), x_range, y_range))
 
     # 计算图形的边界范围
     pos['malloc'] = [min(x_values) + x_range / 2, max(y_values) + 0.1]  # 将节点 "a" 放在 (0, 1) 的位置
 
     # 动态调整画布比例
-    fig, ax = plt.subplots(figsize=(x_range * 0.2, y_range * 0.2))
+    fig, ax = plt.subplots(figsize=(x_range * 0.2, y_range * 0.2), dpi=10)
     # 绘制有向图
     # nx.draw(G, pos, node_shape = "s", node_color='lightblue', alpha = 0.5, edge_color='gray', node_size=10000, arrows=True, arrowsize=16)
     nx.draw(G, pos, alpha = 1, edge_color='black', arrows=True, arrowsize=48)
@@ -90,6 +91,8 @@ def gen_image1(chains_with_weights):
 
     # 调整布局以避免箭头重叠
     plt.tight_layout()
+    plt.autoscale(enable=True, axis='both', tight=True)
+    print("plt {} {}".format(plt.xlim(), plt.ylim()))
 
     # 保存为 SVG 文件
     plt.savefig("directed_graph_with_weights.svg", format="svg")
@@ -124,7 +127,7 @@ def parse_log(file_path):
     return result
 
 
-def parse_ml_log(file_path):
+def parse_ml_log(file_path, print_combined=False):
     with open(file_path, 'r') as file:
         text = file.read()
 
@@ -133,21 +136,36 @@ def parse_ml_log(file_path):
 
     result = []
     lines = text.splitlines()
+    outstanding_index = 0
+    for i, line in enumerate(lines):
+        if line == "===============*********===============":
+            outstanding_index = i + 1
+    if print_combined:
+        lines = lines[0:outstanding_index]
+    else:
+        lines = lines[outstanding_index:]
     i = 0
     while i < len(lines):
         match = re.match(r'\s*(\d+) bytes in (\d+) allocations from stack', lines[i])
         if match:
             bytes_alloc = int(match.group(1))
             alloc_count = int(match.group(2))
+            print("====> {} {} {}".format(bytes_alloc, alloc_count, lines[i]))
             i += 1
             stack = []
-            while i < len(lines) and lines[i].strip().startswith('0x'):
+            def is_stack_line(x):
+                if print_combined:
+                    return x.startswith('\t\t')
+                else:
+                    return x.strip().startswith('0x')
+            while i < len(lines) and is_stack_line(lines[i]):
                 # 提取符号信息（地址后面那部分）
                 parts = lines[i].split('\t')[-1]
                 stack.append(parts)
                 i += 1
             stack = list(map(handle, stack))
             stack = list(filter(lambda x: x!="\"[unknown]\"", stack))
+            stack = list(filter(lambda x: x!="\"stack information lost\"", stack))
             stack.reverse()
             stack.append("malloc")
             # Include frequency
@@ -162,7 +180,7 @@ def parse_ml_log(file_path):
 
 
 if __name__ == '__main__':
-    arr = parse_ml_log("mleak.txt")
+    arr = parse_ml_log("mleak.txt", print_combined=True)
     # for a in arr[:2]:
     #     print("{}".format(a))
         

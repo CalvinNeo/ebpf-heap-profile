@@ -484,10 +484,9 @@ if not kernel_trace:
                 if args.symbols_prefix is not None:
                         sym = args.symbols_prefix + sym
                 try:
-                        a = bpf.attach_uprobe(name=obj, sym=sym,
+                        bpf.attach_uprobe(name=obj, sym=sym,
                                           fn_name=fn_prefix + "_enter",
                                           pid=pid)
-                        print("{}".format(a.num_open_uprobes()))
                         if need_uretprobe:
                                 bpf.attach_uretprobe(name=obj, sym=sym,
                                              fn_name=fn_prefix + "_exit",
@@ -544,6 +543,7 @@ def print_outstanding():
                 if info.stack_id in alloc_info:
                         alloc_info[info.stack_id].update(info.size)
                 else:
+                        # unwinded stack
                         stack = list(stack_traces.walk(info.stack_id))
                         combined = []
                         for addr in stack:
@@ -599,11 +599,14 @@ while True:
                 try:
                         sleep(interval)
                 except KeyboardInterrupt:
-                        exit()
-                if args.combined_only:
                         print_outstanding_combined()
-                else:
+                        print("===============*********===============")
                         print_outstanding()
+                        sys.stdout.flush()
+                        exit()
+                print_outstanding_combined()
+                print("===============*********===============")
+                print_outstanding()
                 sys.stdout.flush()
                 count_so_far += 1
                 if num_prints is not None and count_so_far >= num_prints:
