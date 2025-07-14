@@ -19,6 +19,7 @@ import argparse
 import subprocess
 import os
 import sys
+import signal
 
 class Allocation(object):
     def __init__(self, stack, size):
@@ -530,15 +531,17 @@ else:
         # need to guess which allocation corresponds to which free.
 
 def print_outstanding():
-        print("[%s] Top %d stacks with outstanding allocations:" %
-              (datetime.now().strftime("%H:%M:%S"), top_stacks))
         alloc_info = {}
         allocs = bpf["allocs"]
         stack_traces = bpf["stack_traces"]
+        print("[%s] Top %d/%d stacks with outstanding allocations:" %
+              (datetime.now().strftime("%H:%M:%S"), top_stacks, len(allocs)))
         for address, info in sorted(allocs.items(), key=lambda a: a[1].size):
                 if BPF.monotonic_time() - min_age_ns < info.timestamp_ns:
+                        print("/// time {} {} {}".format(BPF.monotonic_time(), min_age_ns, info.timestamp_ns))
                         continue
                 if info.stack_id < 0:
+                        # print("/// stack_id {}".format(info.stack_id))
                         continue
                 if info.stack_id in alloc_info:
                         alloc_info[info.stack_id].update(info.size)
@@ -599,6 +602,8 @@ while True:
                 try:
                         sleep(interval)
                 except KeyboardInterrupt:
+                        # Ignore later signals, so the handling process will not be interrupted
+                        signal.signal(signal.SIGINT, signal.SIG_IGN)
                         print_outstanding_combined()
                         print("===============*********===============")
                         print_outstanding()
